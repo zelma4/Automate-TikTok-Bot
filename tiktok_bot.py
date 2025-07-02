@@ -149,8 +149,76 @@ class TikTokUploader:
         with open(self.config_file, 'w', encoding='utf-8') as f:
             json.dump(self.config, f, indent=2, ensure_ascii=False)
     
-    async def upload_video(self, video_path: Path, 
-                          description: str = None) -> bool:
+    def generate_description(self, video_path: Path) -> str:
+        """
+        Згенерувати опис відео на основі назви файлу
+        
+        Args:
+            video_path: Шлях до відеофайлу
+            
+        Returns:
+            Згенерований опис
+        """
+        filename = video_path.stem
+        
+        # Парсинг назви файлу
+        # (приклад: "Ginny & Georgia. S03 E01. (Title)_clip_001")
+        series_name = "Невідомий серіал"
+        season = ""
+        episode = ""
+        clip_number = ""
+        
+        try:
+            # Витягти назву серіалу (до першої крапки)
+            if "." in filename:
+                series_name = filename.split(".")[0].strip()
+            
+            # Знайти сезон і епізод (S03 E01)
+            import re
+            season_match = re.search(r'S(\d+)', filename)
+            episode_match = re.search(r'E(\d+)', filename)
+            clip_match = re.search(r'clip_(\d+)', filename)
+            
+            if season_match:
+                season = f"S{season_match.group(1)}"
+            if episode_match:
+                episode = f"E{episode_match.group(1)}"
+            if clip_match:
+                clip_number = f"частина {clip_match.group(1)}"
+                
+        except Exception as e:
+            logger.warning(f"Помилка парсингу назви файлу: {e}")
+        
+        # Створити опис
+        description_parts = []
+        
+        # Додати назву серіалу
+        if series_name != "Невідомий серіал":
+            description_parts.append(f"🎬 {series_name}")
+        
+        # Додати сезон та епізод
+        if season and episode:
+            description_parts.append(f"📺 {season} {episode}")
+        
+        # Додати номер кліпу
+        if clip_number:
+            description_parts.append(f"🎞️ {clip_number}")
+        
+        # Додати випадковий шаблон
+        template = random.choice(self.config["description_templates"])
+        description_parts.append(template)
+        
+        # Поєднати все
+        description = " | ".join(description_parts)
+        
+        # Додати хештеги
+        hashtags = " ".join(self.config["hashtags"])
+        if hashtags:
+            description += f"\n\n{hashtags}"
+        
+        return description
+    async def upload_video(self, video_path: Path,
+                           description: str = None) -> bool:
         """
         Завантажити відео у TikTok через API
         
@@ -171,8 +239,7 @@ class TikTokUploader:
             
             # Створити опис якщо не вказаний
             if not description:
-                description = random.choice(self.config["description_templates"])
-                description += " " + " ".join(self.config["hashtags"])
+                description = self.generate_description(video_path)
             
             # Отримати назву файлу для заголовку
             title = video_path.stem

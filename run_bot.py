@@ -104,8 +104,12 @@ def main():
     parser = argparse.ArgumentParser(description='TikTok Bot')
     parser.add_argument(
         'command',
-        choices=['setup', 'process', 'run'],
+        choices=['setup', 'process', 'run', 'post', 'upload'],
         help='Команда для виконання'
+    )
+    parser.add_argument(
+        '--file',
+        help='Шлях до конкретного файлу для завантаження'
     )
     
     args = parser.parse_args()
@@ -117,6 +121,14 @@ def main():
             asyncio.run(process_videos())
         elif args.command == 'run':
             asyncio.run(run_bot())
+        elif args.command == 'post':
+            asyncio.run(post_now())
+        elif args.command == 'upload':
+            if args.file:
+                asyncio.run(post_specific(args.file))
+            else:
+                logger.error("❌ Для команди 'upload' потрібно вказати --file")
+                sys.exit(1)
             
     except KeyboardInterrupt:
         logger.info("\n👋 Зупинка програми...")
