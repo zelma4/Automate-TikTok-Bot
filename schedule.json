@@ -1,0 +1,10 @@
+{
+  "posts_per_day": 3,
+  "posting_times": [
+    "09:00",
+    "15:00",
+    "21:00"
+  ],
+  "last_upload": null,
+  "queue": []
+}

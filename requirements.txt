@@ -1,0 +1,5 @@
+# Основні залежності для TikTok бота
+ffmpeg-python==0.2.0
+selenium==4.16.0
+webdriver-manager==4.0.1
+python-dotenv==1.0.0

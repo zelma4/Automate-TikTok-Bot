@@ -1,0 +1,36 @@
+{
+  "username": "zelma4@icloud.com",
+  "password": "wofqyr-tigduj-1gytDi",
+  "session_file": "tiktok_session.json",
+  "hashtags": [
+    "#serial",
+    "#ginnergeorge",
+    "#netflix",
+    "#video",
+    "#trend",
+    "#viral",
+    "#series",
+    "#mood"
+  ],
+  "description_templates": [
+    "The best moments from the series! 🔥",
+    "It was epic! 😱",
+    "Who else watches this series? 💕",
+    "Your reaction to this scene? 🤔",
+    "When you understand this scene... 💯",
+    "A moment that will be remembered forever ✨",
+    "Series that change lives 🎬"
+  ],
+  "video_settings": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "bitrate": "2M",
+    "audio_bitrate": "128k"
+  },
+  "upload_settings": {
+    "wait_between_uploads": 300,
+    "max_retries": 3,
+    "upload_timeout": 120
+  }
+}
