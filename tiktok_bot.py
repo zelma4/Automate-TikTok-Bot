@@ -113,11 +113,15 @@ class VideoProcessor:
 
 
 class TikTokUploader:
-    """Клас для завантаження відео у TikTok"""
+    """Клас для завантаження відео у TikTok через API"""
     
     def __init__(self, config_file: str = "tiktok_config.json"):
         self.config_file = config_file
         self.load_config()
+        
+        # Ініціалізувати API клієнт
+        from tiktok_api import TikTokAPIClient
+        self.api_client = TikTokAPIClient()
         
     def load_config(self):
         """Завантажити конфігурацію TikTok"""
@@ -127,16 +131,16 @@ class TikTokUploader:
         else:
             # Створити шаблон конфігурації
             self.config = {
-                "username": "your_tiktok_username",
-                "password": "your_tiktok_password",
-                "session_file": "tiktok_session.json",
-                "hashtags": ["#серіал", "#гінніджорджія", "#netflix", "#відео"],
+                "hashtags": [
+                    "#серіал", "#гінніджорджія", "#netflix", "#відео"
+                ],
                 "description_templates": [
                     "Найкращі моменти з серіалу! 🔥",
                     "Це було епічно! 😱",
                     "Хто ще дивиться цей серіал? 💕",
                     "Ваша реакція на цю сцену? 🤔"
-                ]
+                ],
+                "privacy_level": "PUBLIC_TO_EVERYONE"
             }
             self.save_config()
             
@@ -145,9 +149,10 @@ class TikTokUploader:
         with open(self.config_file, 'w', encoding='utf-8') as f:
             json.dump(self.config, f, indent=2, ensure_ascii=False)
     
-    async def upload_video(self, video_path: Path, description: str = None) -> bool:
+    async def upload_video(self, video_path: Path, 
+                          description: str = None) -> bool:
         """
-        Завантажити відео у TikTok
+        Завантажити відео у TikTok через API
         
         Args:
             video_path: Шлях до відеофайлу
@@ -157,25 +162,35 @@ class TikTokUploader:
             True якщо завантаження успішне
         """
         try:
-            # Імпортуємо автоматизацію браузера
-            from tiktok_automation import TikTokAutomation
+            # Перевірити авторизацію
+            if not self.api_client.is_authenticated():
+                logger.error(
+                    "API не авторизований. Запустіть setup_tiktok_api.py"
+                )
+                return False
             
-            automation = TikTokAutomation(self.config_file)
-            automation.setup_driver(headless=False)
+            # Створити опис якщо не вказаний
+            if not description:
+                description = random.choice(self.config["description_templates"])
+                description += " " + " ".join(self.config["hashtags"])
             
-            try:
-                if automation.login():
-                    if not description:
-                        description = random.choice(self.config["description_templates"])
-                        description += " " + " ".join(self.config["hashtags"])
-                    
-                    success = await automation.upload_video(video_path, description)
-                    return success
-                else:
-                    logger.error("Не вдалося увійти у TikTok")
-                    return False
-            finally:
-                automation.close()
+            # Отримати назву файлу для заголовку
+            title = video_path.stem
+            
+            # Завантажити відео через API
+            result = self.api_client.upload_video(
+                video_path=str(video_path),
+                title=title,
+                description=description,
+                privacy_level=self.config.get("privacy_level", "SELF_ONLY")
+            )
+            
+            if result:
+                logger.info(f"Відео успішно завантажено: {video_path.name}")
+                return True
+            else:
+                logger.error(f"Помилка завантаження: {video_path.name}")
+                return False
             
         except Exception as e:
             logger.error(f"Помилка при завантаженні {video_path}: {e}")

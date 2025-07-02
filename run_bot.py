@@ -35,6 +35,47 @@ async def run_bot():
     await bot.run_continuous()
 
 
+async def post_now():
+    """Опублікувати наступне відео з черги зараз"""
+    logger.info("🚀 Миттєвий постинг...")
+    bot = TikTokBot()
+    
+    if not bot.scheduler.schedule["queue"]:
+        logger.warning("❌ Черга порожня! Спочатку обробіть відео.")
+        return
+    
+    video_path = Path(bot.scheduler.schedule["queue"][0])
+    if not video_path.exists():
+        logger.error(f"❌ Файл не знайдено: {video_path}")
+        return
+    
+    success = await bot.uploader.upload_video(video_path)
+    if success:
+        # Видалити з черги після успішного завантаження
+        bot.scheduler.schedule["queue"].pop(0)
+        bot.scheduler.save_schedule()
+        logger.info(f"✅ Відео опубліковано: {video_path.name}")
+    else:
+        logger.error("❌ Помилка завантаження відео")
+
+
+async def post_specific(file_path: str):
+    """Опублікувати конкретний файл"""
+    logger.info(f"🎯 Публікація файлу: {file_path}")
+    bot = TikTokBot()
+    
+    video_path = Path(file_path)
+    if not video_path.exists():
+        logger.error(f"❌ Файл не знайдено: {video_path}")
+        return
+    
+    success = await bot.uploader.upload_video(video_path)
+    if success:
+        logger.info(f"✅ Відео опубліковано: {video_path.name}")
+    else:
+        logger.error("❌ Помилка завантаження відео")
+
+
 def setup_project():
     """Початкове налаштування проекту"""
     logger.info("🔧 Налаштування проекту...")

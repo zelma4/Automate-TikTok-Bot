@@ -46,3 +46,6 @@ sessions/
 
 # Serial files (comment out if you want to track them)
 Serial/
+
+# TikTok API токени та сесії
+tiktok_tokens.json
